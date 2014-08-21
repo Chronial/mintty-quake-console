@@ -55,7 +55,8 @@ isVisible := False
 ;*******************************************************************************
 ;               Hotkeys
 ;*******************************************************************************
-Hotkey, %consoleHotkey%, ConsoleHotkey
+;Hotkey, %consoleHotkey%, ConsoleHotkey
+Hotkey, SC029, ConsoleHotkey
 
 ;*******************************************************************************
 ;               Menu
@@ -91,7 +92,8 @@ init()
     ; get last active window
     WinGet, hw_current, ID, A
     if !WinExist("ahk_class mintty") {
-        Run %minttyPath_args%, %cygwinBinDir%, Hide, hw_mintty
+        EnvGet home, HOME
+        Run %minttyPath_args%, %home%, Hide, hw_mintty
         WinWait ahk_pid %hw_mintty%
     }
     else {
@@ -319,7 +321,7 @@ return
 ; why this method doesn't work, I don't know...
 ; IncreaseHeight:
 ^!NumpadAdd::
-^+=::
+;^+=::
     if(WinActive("ahk_pid" . hw_mintty)) {
 
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
@@ -331,7 +333,7 @@ return
 return
 ; DecreaseHeight:
 ^!NumpadSub::
-^+-::
+;^+-::
     if(WinActive("ahk_pid" . hw_mintty)) {
         if(heightConsoleWindow > 100) {
             heightConsoleWindow -= animationStep
@@ -406,7 +408,7 @@ OptionsGui() {
 
         Gui, Add, Text, x232 y210 w220 h20 , Animation Delta (px):
         Gui, Add, Text, x232 y260 w220 h20 , Animation Time (ms):
-        Gui, Add, Slider, x232 y230 w220 h30 VanimationStep Range1-100 TickInterval20 , %animationStep%
+        Gui, Add, Slider, x232 y230 w220 h30 VanimationStep Range1-500 TickInterval50 , %animationStep%
         Gui, Add, Slider, x232 y280 w220 h30 VanimationTimeout Range1-50 TickInterval10, %animationTimeout%
         Gui, Add, Text, x232 y310 w220 h20 , Window Transparency (`%):
         Gui, Add, Slider, x232 y330 w220 h30 VinitialTrans Range100-255 , %initialTrans%
@@ -456,22 +458,13 @@ OptionsGui() {
 
 VirtScreenPos(ByRef mLeft, ByRef mTop, ByRef mWidth, ByRef mHeight)
 {
-  Coordmode, Mouse, Screen
-    MouseGetPos,x,y
-    SysGet, m, MonitorCount
-    ; Iterate through all monitors.
-    Loop, %m%
-    {   ; Check if the window is on this monitor.
-      SysGet, Mon, Monitor, %A_Index%
-      SysGet, MonArea, MonitorWorkArea, %A_Index%
-    if (x >= MonLeft && x <= MonRight && y >= MonTop && y <= MonBottom)
-    {
-    mLeft:=MonAreaLeft
-    mTop:=MonAreaTop
-    mWidth:=(MonAreaRight - MonAreaLeft)
-    mHeight:=(MonAreaBottom - MonAreaTop)
-    }
-    }
+    Coordmode, Mouse, Screen
+    SysGet, prim, MonitorPrimary
+    SysGet, MonArea, MonitorWorkArea, %prim%
+    mLeft := MonAreaLeft
+    mTop := MonAreaTop
+    mWidth := (MonAreaRight - MonAreaLeft)
+    mHeight := (MonAreaBottom - MonAreaTop)
 }
 
 /*
