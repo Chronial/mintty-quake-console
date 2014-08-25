@@ -130,17 +130,17 @@ Slide(Window, Dir)
     global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
     
-    WinGet, testTrans, Transparent, %Window%
-    if (testTrans = "" or (animationModeFade and currentTrans = 0))
-    {
-        ; Solution for Windows 8 to find window without borders, only 1st call will flash borders
-        WinSet, Style, +0x040000, %Window% ; show window border
-        WinSet, Transparent, %currentTrans%, %Window%
-        WinSet, Style, -0x040000, %Window% ; hide window border
-        ; this problem seems to happen if mintty's transparency is set to "Off"
-        ; mintty will lose transparency when the window loses focus, so it's best to just use
-        ; mintty's built in transparency setting
-    }
+    ;WinGet, testTrans, Transparent, %Window%
+    ;if (testTrans = "" or (animationModeFade and currentTrans = 0))
+    ;{
+    ;    ; Solution for Windows 8 to find window without borders, only 1st call will flash borders
+    ;    WinSet, Style, +0x040000, %Window% ; show window border
+    ;    WinSet, Transparent, %currentTrans%, %Window%
+    ;    WinSet, Style, -0x040000, %Window% ; hide window border
+    ;    ; this problem seems to happen if mintty's transparency is set to "Off"
+    ;    ; mintty will lose transparency when the window loses focus, so it's best to just use
+    ;    ; mintty's built in transparency setting
+    ;}
 
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
     
@@ -153,7 +153,7 @@ Slide(Window, Dir)
     If (Dir = "In")
     {
       WinShow %Window%
-      WinLeft := ScreenLeft + (1 - initialWidth/100) * ScreenWidth / 2
+      WinLeft := ScreenLeft + ((ScreenWidth - initialWidth) / 2)
       WinMove, %Window%,, WinLeft
     }
     Loop
@@ -219,9 +219,14 @@ toggleScript(state) {
 
         VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
 
-        width := ScreenWidth * widthConsoleWindow / 100
+        ;width := ScreenWidth * widthConsoleWindow / 100
+        ;left := ScreenLeft + ((ScreenWidth - width) /  2)
+        width := widthConsoleWindow
         left := ScreenLeft + ((ScreenWidth - width) /  2)
+        ;left := ScreenLeft
+        ;left := 1000
         WinMove, ahk_pid %hw_mintty%, , %left%, -%heightConsoleWindow%, %width%, %heightConsoleWindow% ; resize/move
+        ;WinMove, ahk_pid %hw_mintty%, , %left%, -%OrigWinHeight% ; only move
 
         scriptEnabled := True
         Menu, Tray, Check, Enabled
@@ -295,9 +300,9 @@ return
 ExitSub:
     if A_ExitReason not in Logoff,Shutdown
     {
-        MsgBox, 4, mintty-quake-console, Are you sure you want to exit?
-        IfMsgBox, No
-            return
+        ;MsgBox, 4, mintty-quake-console, Are you sure you want to exit?
+        ;IfMsgBox, No
+        ;    return
         toggleScript("off")
     }
 ExitApp
