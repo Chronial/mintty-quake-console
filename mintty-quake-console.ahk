@@ -75,7 +75,6 @@ Menu, Tray, Add, Auto-Hide, ToggleAutoHide
 if (autohide)
     Menu, Tray, Check, Auto-Hide
 Menu, Tray, Add
-Menu, Tray, Add, Options, ShowOptionsGui
 Menu, Tray, Add, About, AboutDlg
 Menu, Tray, Add, Reload, ReloadSub
 Menu, Tray, Add, Exit, ExitSub
@@ -95,8 +94,7 @@ init()
         EnvGet home, HOME
         Run %minttyPath_args%, %home%, Hide, hw_mintty
         WinWait ahk_pid %hw_mintty%
-    }
-    else {
+    } else {
         WinGet, hw_mintty, PID, ahk_class mintty
     }
 
@@ -114,9 +112,7 @@ toggle()
         Slide("ahk_pid" . hw_mintty, "Out")
         ; reset focus to last active window
         WinActivate, ahk_id %hw_current%
-    }
-    else
-    {
+    } else {
         ; get last active window
         WinGet, hw_current, ID, A
 
@@ -130,66 +126,35 @@ Slide(Window, Dir)
     global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
     
-    ;WinGet, testTrans, Transparent, %Window%
-    ;if (testTrans = "" or (animationModeFade and currentTrans = 0))
-    ;{
-    ;    ; Solution for Windows 8 to find window without borders, only 1st call will flash borders
-    ;    WinSet, Style, +0x040000, %Window% ; show window border
-    ;    WinSet, Transparent, %currentTrans%, %Window%
-    ;    WinSet, Style, -0x040000, %Window% ; hide window border
-    ;    ; this problem seems to happen if mintty's transparency is set to "Off"
-    ;    ; mintty will lose transparency when the window loses focus, so it's best to just use
-    ;    ; mintty's built in transparency setting
-    ;}
-
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
     
-    if (animationModeFade)
-    {
-        WinMove, %Window%,, WinLeft, ScreenTop
-    }
-
     ; Multi monitor support.  Always move to current window
-    If (Dir = "In")
-    {
+    If (Dir = "In") {
       WinShow %Window%
       WinLeft := ScreenLeft + ((ScreenWidth - initialWidth) / 2)
       WinMove, %Window%,, WinLeft
     }
-    Loop
-    {
-      inConditional := (animationModeSlide) ? (Ypos >= ScreenTop) : (currentTrans == initialTrans)
-      outConditional := (animationModeSlide) ? (Ypos <= (-WinHeight)) : (currentTrans == 0)
+    Loop {
+      inConditional := Ypos >= ScreenTop
+      outConditional := Ypos <= (-WinHeight)
 
       If (Dir = "In") And inConditional Or (Dir = "Out") And outConditional
          Break
 
-      if (animationModeFade = 1)
-      {
-          dRate := animationStep/300*255
-          dT := % (Dir = "In") ? currentTrans + dRate : currentTrans - dRate
-          dT := (dT < 0) ? 0 : ((dT > initialTrans) ? initialTrans : dT)
-
-          WinSet, Transparent, %dT%, %Window%
-          currentTrans := dT
-      }
-      else
-      {
-          dRate := animationStep
-          dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
-          WinMove, %Window%,,, dY
-      }
+      dRate := animationStep
+      dY := % (Dir = "In") ? Ypos + dRate : Ypos - dRate
+      WinMove, %Window%,,, dY
       WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
       Sleep, %animationTimeout%
     }
 
-    If (Dir = "In")  {
+    If (Dir = "In") {
         WinMove, %Window%,,, ScreenTop
         if (autohide)
             SetTimer, HideWhenInactive, 250
         isVisible := True
     }
-    If (Dir = "Out")  {
+    If (Dir = "Out") {
         WinHide %Window%
         if (autohide)
             SetTimer, HideWhenInactive, Off
@@ -207,13 +172,6 @@ toggleScript(state) {
             return
         }
         
-        ; use mintty's transparency setting, if it's set
-        WinGet, minttyTrans, Transparent, ahk_pid %hw_mintty%
-        if (minttyTrans <> "")
-            initialTrans:=minttyTrans
-        WinSet, Transparent, %initialTrans%, ahk_pid %hw_mintty%
-        currentTrans:=initialTrans
-
         WinHide ahk_pid %hw_mintty%
         WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders and caption/title
 
@@ -240,7 +198,7 @@ toggleScript(state) {
         Slide("ahk_pid" . hw_mintty, "In")
     }
     else if (state = "off") {
-            WinSet, Style, +0xC40000, ahk_pid %hw_mintty% ; show window borders and caption/title
+        WinSet, Style, +0xC40000, ahk_pid %hw_mintty% ; show window borders and caption/title
         if (OrigYpos >= 0)
             WinMove, ahk_pid %hw_mintty%, , %OrigXpos%, %OrigYpos%, %OrigWinWidth%, %OrigWinHeight% ; restore size / position
         else
@@ -260,12 +218,9 @@ HideWhenInactive:
 return
 
 ToggleVisible:
-    if(isVisible)
-    {
+    if(isVisible) {
         Slide("ahk_pid" . hw_mintty, "Out")
-    }
-    else
-    {
+    } else {
         WinActivate ahk_pid %hw_mintty%
         Slide("ahk_pid" . hw_mintty, "In")
     }
@@ -289,9 +244,7 @@ ConsoleHotkey:
         IfWinExist ahk_pid %hw_mintty%
         {
             toggle()
-        }
-        else
-        {
+        } else {
             init()
         }
     }
@@ -313,10 +266,6 @@ return
 
 AboutDlg:
     MsgBox, 64, About, mintty-quake-console AutoHotkey script`nVersion: %VERSION%`nAuthor: Jonathon Rogers <lonepie@gmail.com>`nURL: https://github.com/lonepie/mintty-quake-console
-return
-
-ShowOptionsGui:
-    OptionsGui()
 return
 
 ;*******************************************************************************
@@ -383,73 +332,6 @@ CheckWindowsStartup(enable) {
             FileDelete, %LinkFile%
         }
     }
-}
-
-OptionsGui() {
-    global
-    If not WinExist("ahk_id" GuiID) {
-        Gui, Add, GroupBox, x12 y10 w450 h110 , General
-            Gui, Add, GroupBox, x12 y130 w450 h250 , Display
-        Gui, Add, Button, x242 y390 w100 h30 Default, Save
-        Gui, Add, Button, x362 y390 w100 h30 , Cancel
-        Gui, Add, Text, x22 y30 w70 h20 , Mintty Path:
-        Gui, Add, Edit, x92 y30 w250 h20 VminttyPath, %minttyPath%
-        Gui, Add, Button, x352 y30 w100 h20, Browse
-        Gui, Add, Text, x22 y60 w100 h20 , Mintty Arguments:
-        Gui, Add, Edit, x122 y60 w330 h20 VminttyArgs, %minttyArgs%
-        Gui, Add, Text, x22 y90 w100 h20 , Hotkey Trigger:
-        Gui, Add, Hotkey, x122 y90 w100 h20 VconsoleHotkey, %consoleHotkey%
-        Gui, Add, CheckBox, x22 y150 w100 h30 VstartHidden Checked%startHidden%, Start Hidden
-        Gui, Add, CheckBox, x22 y180 w150 h30 Vautohide Checked%autohide%, Auto-Hide when focus is lost
-        Gui, Add, CheckBox, x22 y210 w120 h30 VstartWithWindows Checked%startWithWindows%, Start With Windows
-        Gui, Add, Text, x22 y250 w100 h20 , Initial Height (px):
-        Gui, Add, Edit, x22 y270 w100 h20 VinitialHeight, %initialHeight%
-        Gui, Add, Text, x22 y300 w115 h20 , Initial Width (percent):
-        Gui, Add, Edit, x22 y320 w100 h20 VinitialWidth, %initialWidth%
-
-        Gui, Add, GroupBox, x232 y150 w220 h45 , Animation Type:
-        Gui, Add, Radio, x252 y168 w70 h20 VanimationModeSlide group Checked%animationModeSlide%, Slide
-        Gui, Add, Radio, x332 y168 w70 h20 VanimationModeFade Checked%animationModeFade%, Fade
-
-        Gui, Add, Text, x232 y210 w220 h20 , Animation Delta (px):
-        Gui, Add, Text, x232 y260 w220 h20 , Animation Time (ms):
-        Gui, Add, Slider, x232 y230 w220 h30 VanimationStep Range1-500 TickInterval50 , %animationStep%
-        Gui, Add, Slider, x232 y280 w220 h30 VanimationTimeout Range1-50 TickInterval10, %animationTimeout%
-        Gui, Add, Text, x232 y310 w220 h20 , Window Transparency (`%):
-        Gui, Add, Slider, x232 y330 w220 h30 VinitialTrans Range100-255 , %initialTrans%
-        ; Gui, Add, Text, x232 y320 w220 h20 +Center, Animation Speed = Delta / Time
-    }
-    ; Generated using SmartGUI Creator 4.0
-    Gui, Show, h440 w482, TerminalHUD Options
-    Gui, +LastFound
-    GuiID := WinExist()
-
-    Loop {
-        ;sleep to reduce CPU load
-        Sleep, 100
-
-        ;exit endless loop, when settings GUI closes
-        If not WinExist("ahk_id" GuiID)
-            Break
-    }
-
-    ButtonSave:
-        Gui, Submit
-        SaveSettings()
-        Reload
-    return
-
-    ButtonBrowse:
-        FileSelectFile, SelectedPath, 3, %A_MyDocuments%, Path to mintty.exe, Executables (*.exe)
-        if SelectedPath !=
-            GuiControl,, MinttyPath, %SelectedPath%
-    return
-
-    GuiClose:
-    GuiEscape:
-    ButtonCancel:
-        Gui, Cancel
-    return
 }
 
 ;*******************************************************************************
