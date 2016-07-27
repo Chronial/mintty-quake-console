@@ -149,11 +149,11 @@ Slide(Window, Dir)
         isVisible := True
     }
     If (Dir = "Out") {
-        WinMinimize %Window%
-        WinHide %Window%
         if (autohide)
             SetTimer, HideWhenInactive, Off
         isVisible := False
+        WinMinimize %Window%
+        WinHide %Window%
     }
 }
 
@@ -209,7 +209,9 @@ toggleScript(state) {
 HideWhenInactive:
     IfWinNotActive ahk_pid %hw_mintty%
     {
-        Slide("ahk_pid" . hw_mintty, "Out")
+        if(isVisible){
+            Slide("ahk_pid" . hw_mintty, "Out")
+        }
         SetTimer, HideWhenInactive, Off
     }
 return
