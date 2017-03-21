@@ -63,7 +63,7 @@ Hotkey, SC029, ConsoleHotkey
 ;*******************************************************************************
 if !InStr(A_ScriptName, ".exe")
     Menu, Tray, Icon, %A_ScriptDir%\terminal.ico
-Menu, Tray, NoStandard
+;Menu, Tray, NoStandard
 ; Menu, Tray, MainWindow
 Menu, Tray, Tip, mintty-quake-console %VERSION%
 Menu, Tray, Click, 1
@@ -89,6 +89,7 @@ init()
     global
     initCount++
     ; get last active window
+    WinGet, hw_current, ID, A
     if !WinExist("ahk_class mintty") {
         EnvGet home, HOME
         Run %minttyPath_args%, %home%, Hide, hw_mintty
@@ -108,8 +109,14 @@ toggle()
 
     IfWinActive ahk_pid %hw_mintty%
     {
+        ; reset focus to last active window
+        WinActivate, ahk_id %hw_current%
+
         Slide("ahk_pid" . hw_mintty, "Out")
     } else {
+        ; get last active window
+        WinGet, hw_current, ID, A
+
         WinActivate ahk_pid %hw_mintty%
         Slide("ahk_pid" . hw_mintty, "In")
     }
@@ -119,9 +126,9 @@ Slide(Window, Dir)
 {
     global initialWidth, animationModeFade, animationModeSlide, animationStep, animationTimeout, autohide, isVisible, currentTrans, initialTrans
     WinGetPos, Xpos, Ypos, WinWidth, WinHeight, %Window%
-    
+
     VirtScreenPos(ScreenLeft, ScreenTop, ScreenWidth, ScreenHeight)
-    
+
     ; Multi monitor support.  Always move to current window
     If (Dir = "In") {
       WinShow %Window%
@@ -166,7 +173,8 @@ toggleScript(state) {
             init()
             return
         }
-        
+
+        WinSet, AlwaysOnTop, On, ahk_pid %hw_mintty% ; Always on top
         WinHide ahk_pid %hw_mintty%
         WinSet, Style, -0xC40000, ahk_pid %hw_mintty% ; hide window borders and caption/title
         WinSet, ExStyle, -0x80, ahk_pid %hw_mintty% ; do not show mininized in taskbar
@@ -196,6 +204,7 @@ toggleScript(state) {
     else if (state = "off") {
         WinSet, Style, +0xC40000, ahk_pid %hw_mintty% ; show window borders and caption/title
         WinSet, ExStyle, +0x80, ahk_pid %hw_mintty% ; show mininized in taskbar
+        WinSet, AlwaysOnTop, Off, ahk_pid %hw_mintty% ; not always on top
         if (OrigYpos >= 0)
             WinMove, ahk_pid %hw_mintty%, , %OrigXpos%, %OrigYpos%, %OrigWinWidth%, %OrigWinHeight% ; restore size / position
         else
