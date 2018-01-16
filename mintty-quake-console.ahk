@@ -93,12 +93,11 @@ init()
     if !WinExist("ahk_class mintty") {
         EnvGet home, HOME
         Run %minttyPath_args%, %home%, Hide, hw_mintty
-        WinWait ahk_pid %hw_mintty%
-    } else {
-        WinGet, hw_mintty, PID, ahk_class mintty
+        ;;; Doesn't work – we don't get the correct PID
+        ;WinWait ahk_pid %hw_mintty%
+        Sleep, 500
     }
-
-
+    WinGet, hw_mintty, PID, ahk_class mintty
     WinGetPos, OrigXpos, OrigYpos, OrigWinWidth, OrigWinHeight, ahk_pid %hw_mintty%
     toggleScript("init")
 }
