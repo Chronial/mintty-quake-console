@@ -217,6 +217,10 @@ toggleScript(state) {
 HideWhenInactive:
     IfWinNotActive ahk_pid %hw_mintty%
     {
+        ; consent.exe is the UAC prompt
+        Process,Exist, consent.exe
+        if ErrorLevel
+            return
         if(isVisible){
             Slide("ahk_pid" . hw_mintty, "Out")
         }
